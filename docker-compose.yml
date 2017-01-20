@@ -1,0 +1,15 @@
+version: "2"
+services:
+  gitlab:
+    image: epflsti/gitlab-docker
+    hostname: gitlab
+    domainname: epfl.ch
+    build: gitlab-main
+    volumes:
+      - "/srv/gitlab/config:/etc/gitlab"
+      - "/srv/gitlab/logs:/var/log/gitlab"
+      - "/srv/gitlab/data:/var/opt/gitlab"
+    ports:
+      - "22:22"
+      - "443:443"
+      - "80:80"
