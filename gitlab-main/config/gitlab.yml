@@ -350,6 +350,17 @@ production: &base
   shared:
     path: <%= @shared_path %>
 
+  ## OmniAuth settings
+  omniauth:
+    allow_single_sign_on: true
+    block_auto_created_users: false
+    enabled: true
+    providers:
+      -
+        name: tequila
+        args:
+          request_info: {name: 'displayname', email: 'email', nickname: 'username'}
+          service_name: gitlab
 
   #
   # 4. Advanced settings
