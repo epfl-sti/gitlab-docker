@@ -12,4 +12,7 @@ services:
     ports:
       - "22:22"
       - "443:443"
+  redirect:
+    image: quay.io/coreos/nginx-https-redirect
+    ports:
       - "80:80"
