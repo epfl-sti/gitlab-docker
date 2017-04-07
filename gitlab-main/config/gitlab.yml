@@ -11,8 +11,8 @@ production: &base
   gitlab:
     ## Web server settings (note: host is the FQDN, do not include http://)
     host: gitlab.epfl.ch
-    port: 443
-    https: true
+    port: 80
+    https: false
 
     # Uncommment this line below if your ssh host is different from HTTP/HTTPS one
     # (you'd obviously need to replace ssh.host_example.com with your own host).

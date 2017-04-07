@@ -9,9 +9,24 @@ services:
       - "/srv/gitlab/config:/etc/gitlab"
       - "/srv/gitlab/logs:/var/log/gitlab"
       - "/srv/gitlab/data:/var/opt/gitlab"
+      - "/srv/gitlab/run/postgres-socket/:/var/opt/gitlab/postgresql/"
+  postgresql:
+    image: postgres:9.2
+    volumes:
+      - "/srv/gitlab/postgresql/data:/var/lib/postgresql/data"
+      - "/srv/gitlab/logs/postgresql:/var/log"
+      - "/srv/gitlab/run/postgres-socket/:/run/postgresql/"
+      - "/srv/gitlab/config/postgresql/passwd:/etc/passwd"
+  haproxy:
+    image: haproxy
+    container_name: gitlabdocker_haproxy  # Single instance, not scalable
+    volumes:
+      - "/srv/gitlab/config/ssl:/usr/local/etc/haproxy/ssl"
+      - "/srv/gitlab/config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
     ports:
       - "22:22"
       - "443:443"
+      - "444:444"
   redirect:
     image: quay.io/coreos/nginx-https-redirect
     ports:

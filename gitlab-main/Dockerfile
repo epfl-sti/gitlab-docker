@@ -1,7 +1,8 @@
 FROM gitlab/gitlab-ce
 MAINTAINER STI-IT Ops <stiitops@groupes.epfl.ch>
 
-ADD config/gitlab.yml /opt/gitlab/embedded/cookbooks/gitlab/templates/default/gitlab.yml.erb
+# Hidden dependency of "bundle exec rake db:migrate RAILS_ENV=production":
+RUN apt update && apt -y install nodejs
 
 # This may not be the smartest way of achieving this, but it does get
 # omniauth-tequila to install, and therefore load, along with all the others:
@@ -10,4 +11,6 @@ RUN echo "gem 'omniauth-tequila', :git => 'https://github.com/gcmalloc/omniauth-
 RUN cd /opt/gitlab/embedded/service/gitlab-rails && bundle install
 # To check that omniauth-tequila was indeed installed in the correct place:
 # docker run --rm -it <image_hash> ls /opt/gitlab/embedded/service/gem/ruby/2.3.0/gems
+
+ADD config/gitlab.yml /opt/gitlab/embedded/cookbooks/gitlab/templates/default/gitlab.yml.erb
 
