@@ -17,6 +17,15 @@ services:
       - "/srv/gitlab/logs/postgresql:/var/log"
       - "/srv/gitlab/run/postgres-socket/:/run/postgresql/"
       - "/srv/gitlab/config/postgresql/passwd:/etc/passwd"
+  redis:
+    image: redis:latest
+    volumes:
+      - "/srv/gitlab/config/redis:/usr/local/etc/redis"
+      - "/srv/gitlab/run/redis-socket:/run/redis"
+      - "/srv/gitlab/data/redis-micro:/var/redis"
+    command:
+      - redis-server
+      - /usr/local/etc/redis/redis.conf
   haproxy:
     image: haproxy
     container_name: gitlabdocker_haproxy  # Single instance, not scalable
