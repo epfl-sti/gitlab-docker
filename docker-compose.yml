@@ -6,10 +6,27 @@ services:
     domainname: epfl.ch
     build: gitlab-main
     volumes:
-      - "/srv/gitlab/config:/etc/gitlab"
-      - "/srv/gitlab/logs:/var/log/gitlab"
-      - "/srv/gitlab/data:/var/opt/gitlab"
-      - "/srv/gitlab/run/postgres-socket/:/var/opt/gitlab/postgresql/"
+      - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key:/etc/gitlab/ssh_host_dsa_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key.pub:/etc/gitlab/ssh_host_dsa_key.pub:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_key:/etc/gitlab/ssh_host_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_key.pub:/etc/gitlab/ssh_host_key.pub:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_ecdsa_key:/etc/gitlab/ssh_host_ecdsa_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_ecdsa_key.pub:/etc/gitlab/ssh_host_ecdsa_key.pub:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_ed25519_key:/etc/gitlab/ssh_host_ed25519_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_ed25519_key.pub:/etc/gitlab/ssh_host_ed25519_key.pub:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_rsa_key:/etc/gitlab/ssh_host_rsa_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_rsa_key.pub:/etc/gitlab/ssh_host_rsa_key.pub:ro"
+      - "/srv/gitlab/secrets/gitlab-secrets.json:/etc/gitlab/gitlab-secrets.json"
+      - "./gitlab-main/config/gitlab.rb:/etc/gitlab/gitlab.rb"
+      - "/srv/gitlab/backup:/var/opt/gitlab/backups"
+      - "/srv/gitlab/data/git-data:/var/opt/gitlab/git-data"
+      - "/srv/gitlab/data/ssh_user_public_keys:/var/opt/gitlab/.ssh"
+      - "/srv/gitlab/data/shared:/var/opt/gitlab/shared"
+      - "/srv/gitlab/data/gitlab-rails/uploads:/var/opt/gitlab/gitlab-rails/uploads"
+      - "/srv/gitlab/data/gitlab-ci/builds:/var/opt/gitlab/gitlab-ci/builds"
+      # Make visible the UNIX domain sockets of the shared DB containers below:
+      - "/srv/gitlab/run/redis-socket:/var/opt/gitlab/redis"
+      - "/srv/gitlab/run/postgres-socket:/var/opt/gitlab/postgresql"
   postgresql:
     image: postgres:9.2
     volumes:
