@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. "$(dirname "$0")"/../lib/lib.sh
+
+docker  exec -it ${dockerstem}_haproxy kill -HUP 1

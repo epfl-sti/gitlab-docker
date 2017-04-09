@@ -1,0 +1,7 @@
+#!/bin/bash
+
+. "$(dirname "$0")"/../lib/lib.sh
+
+dockerno=${1:-3}
+
+docker exec -it ${dockerstem}_gitlab_${dockerno} su -c "/opt/gitlab/bin/gitlab-rake gitlab:backup:create RAILS_ENV=production" git
