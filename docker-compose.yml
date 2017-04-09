@@ -47,8 +47,8 @@ services:
     image: haproxy
     container_name: gitlabdocker_haproxy  # Single instance, not scalable
     volumes:
-      - "/srv/gitlab/config/ssl:/usr/local/etc/haproxy/ssl"
-      - "/srv/gitlab/config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+      - "/srv/gitlab/ssl:/usr/local/etc/haproxy/ssl"
+      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
     ports:
       - "22:22"
       - "443:443"
