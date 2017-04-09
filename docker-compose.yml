@@ -21,7 +21,7 @@ services:
       - "/srv/gitlab/backup:/var/opt/gitlab/backups"
       - "/srv/gitlab/data/git-data:/var/opt/gitlab/git-data"
       - "/srv/gitlab/data/ssh_user_public_keys:/var/opt/gitlab/.ssh"
-      - "/srv/gitlab/data/shared:/var/opt/gitlab/shared"
+      - "/srv/gitlab/data/shared:/var/opt/gitlab/gitlab-rails/shared"
       - "/srv/gitlab/data/gitlab-rails/uploads:/var/opt/gitlab/gitlab-rails/uploads"
       - "/srv/gitlab/data/gitlab-ci/builds:/var/opt/gitlab/gitlab-ci/builds"
       # Make visible the UNIX domain sockets of the shared DB containers below:
