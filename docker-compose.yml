@@ -39,7 +39,6 @@ services:
     volumes:
       - "/srv/gitlab/config/redis:/usr/local/etc/redis"
       - "/srv/gitlab/run/redis-socket:/run/redis"
-      - "/srv/gitlab/data/redis-micro:/var/redis"
     command:
       - redis-server
       - /usr/local/etc/redis/redis.conf
