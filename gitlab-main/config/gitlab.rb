@@ -184,9 +184,6 @@ external_url 'https://gitlab.epfl.ch/'
 #     "args" => { "access_type" => "offline", "approval_prompt" => "" }
 #   }
 # ]
-
-gitlab_rails['omniauth_external_providers'] = []
-
 #
 # If you setup Bitbucket importer under omniauth providers you will need to add the keys
 # which will allow connection between Bitbucket and GitLab.
