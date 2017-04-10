@@ -9,7 +9,7 @@ Usage: $0 [-n|--docker <instance number>] <rake_command>
 Where <rake_command> is one of 
 
    gitlab:env:info
-   gitlab:sidekiq:check
+   cache:clear
    gitlab:backup:create
 
 ... And more, see https://docs.gitlab.com/ce/administration/raketasks/maintenance.html#maintenance-rake-tasks
