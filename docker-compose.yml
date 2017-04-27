@@ -28,7 +28,7 @@ services:
       - "/srv/gitlab/run/redis-socket:/var/opt/gitlab/redis"
       - "/srv/gitlab/run/postgres-socket:/var/opt/gitlab/postgresql"
   postgresql:
-    image: postgres:9.2
+    image: postgres:9.6
     volumes:
       - "/srv/gitlab/postgresql/data:/var/lib/postgresql/data"
       - "/srv/gitlab/logs/postgresql:/var/log"
