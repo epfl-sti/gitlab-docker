@@ -48,6 +48,7 @@ services:
     volumes:
       - "/srv/gitlab/ssl:/usr/local/etc/haproxy/ssl"
       - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+      - "./haproxy:/assets"
     ports:
       - "22:22"
       - "443:443"
