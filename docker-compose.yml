@@ -42,18 +42,35 @@ services:
     command:
       - redis-server
       - /usr/local/etc/redis/redis.conf
-  haproxy:
-    image: haproxy
-    container_name: gitlabdocker_haproxy  # Single instance, not scalable
+  frontend:
+    image: nginx
+    container_name: gitlabdocker_frontend  # Single instance, not scalable
     volumes:
-      - "/srv/gitlab/ssl:/usr/local/etc/haproxy/ssl"
-      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
-      - "./haproxy:/assets"
+      - "/srv/gitlab/ssl:/etc/ssl"
+      - "./frontend/nginx.conf.tt:/etc/nginx/nginx.conf.tt:ro"
+      - "./frontend:/assets"
     ports:
-      - "22:22"
       - "443:443"
-      - "444:444"
+      - "22:22"
+    environment:
+      - ENVIRONMENT=prod
+    command: /assets/nginx-wrangler /etc/nginx/nginx.conf.tt
+  frontend_staging:
+    image: nginx
+    container_name: gitlabdocker_frontend_staging  # Single instance, not scalable
+    volumes:
+      - "/srv/gitlab/ssl:/etc/ssl"
+      - "./frontend/nginx.conf.tt:/etc/nginx/nginx.conf.tt:ro"
+      - "./frontend:/assets"
+    ports:
+      - "444:443"
+      - "23:22"
+    environment:
+      - ENVIRONMENT=staging
+    command: /assets/nginx-wrangler /etc/nginx/nginx.conf.tt
   redirect:
     image: quay.io/coreos/nginx-https-redirect
     ports:
       - "80:80"
+  plantuml:
+    image: webvariants/plantuml-server
