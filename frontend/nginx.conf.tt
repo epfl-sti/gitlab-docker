@@ -71,7 +71,7 @@ our $backend_name = $is_prod ? "prod" : "gitlabdocker_gitlab_3";
         ssl_certificate_key    /etc/ssl/gitlab.epfl.ch.key;
 
 
-        location = /assets/502.html {
+        location = /assets/50x.html {
             internal;
             root /;
         }
@@ -83,6 +83,11 @@ our $backend_name = $is_prod ? "prod" : "gitlabdocker_gitlab_3";
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
             proxy_pass http://[% backend_name %];
+            error_page 500 /assets/50x.html;
+            error_page 501 /assets/50x.html;
+            error_page 502 /assets/50x.html;
+            error_page 503 /assets/50x.html;
+            error_page 504 /assets/50x.html;
             error_page 502 /assets/502.html;
         }
     }
