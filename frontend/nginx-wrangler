@@ -19,10 +19,12 @@ sub interpolated_config {
 sub configure_nginx {
   my ($config) = @_;
   local *CONFIG;
-  open(CONFIG, ">", "/etc/nginx/nginx.conf")
-    or die "Unable to open /etc/nginx/nginx.conf for writing: $!";
+  open(CONFIG, ">", "/etc/nginx/nginx.conf.NEW.$$")
+    or die "Unable to open /etc/nginx/nginx.conf.NEW.$$ for writing: $!";
   do { (print CONFIG $config) && (close CONFIG) }
-    or die "Unable to close /etc/nginx/nginx.conf: $!";
+    or die "Unable to close /etc/nginx/nginx.conf.NEW.$$: $!";
+  rename("/etc/nginx/nginx.conf.NEW.$$", "/etc/nginx/nginx.conf")
+    or die "Unable to rename /etc/nginx/nginx.conf.NEW.$$ to /etc/nginx/nginx.conf: $!";
 }
 
 sub watch_nginx {
