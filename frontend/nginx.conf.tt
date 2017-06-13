@@ -90,6 +90,15 @@ our $backend_name = $is_prod ? "prod" : "gitlabdocker_gitlab_3";
             error_page 502 /assets/50x.html;
             error_page 503 /assets/50x.html;
             error_page 504 /assets/50x.html;
+        }
+
+        location /plantuml {
+            proxy_set_header HOST $host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+            proxy_pass http://gitlabdocker_plantuml_1:8080/plantuml;
             error_page 502 /assets/502.html;
         }
     }
