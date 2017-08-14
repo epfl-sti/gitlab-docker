@@ -2,6 +2,12 @@
 
 # Keep nginx in check; SIGHUP it whenever the backend set changes
 
+BEGIN {
+  unless (eval { require "Net::DNS"; 1 }) {
+    system("set -e -x; apt -y update; apt -y install libnet-dns-perl")
+  };
+}
+
 use strict;
 use POSIX ":sys_wait_h";
 

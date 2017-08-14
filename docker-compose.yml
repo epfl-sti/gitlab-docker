@@ -1,4 +1,4 @@
-version: "2"
+version: "3.3"
 services:
   gitlab:
     image: epflsti/gitlab-docker
@@ -27,6 +27,11 @@ services:
       # Make visible the UNIX domain sockets of the shared DB containers below:
       - "/srv/gitlab/run/redis-socket:/var/opt/gitlab/redis"
       - "/srv/gitlab/run/postgres-socket:/var/opt/gitlab/postgresql"
+    deploy:
+      # 2 for the main instance, 1 for the staging area
+      replicas: 3
+      # nginx consumers need to be able to tell the instances apart
+      endpoint_mode: dnsrr
   postgresql:
     image: postgres:9.6
     volumes:

@@ -1,20 +1,61 @@
 [% PERL %]
 
 use warnings; no warnings "redefine";
+
 use strict;
 
 our $is_prod = "prod" eq ($ENV{ENVIRONMENT} || "dev");
 
-sub all_backend_hostnames {
-  return qw(gitlabdocker_gitlab_1 gitlabdocker_gitlab_2) if $ENV{DEBUG};
-  my $id = 1; my @hostnames;
-  for(my $id = 1; $id <= 2; $id++) {
-    my $newhostname = "gitlabdocker_gitlab_$id";
-    do { push @hostnames, $newhostname }
-       unless (`env - /usr/bin/ping -c 1 -W 1 $newhostname 2>&1` =~ m/unknown host/i);
+{
+package My::Backend;
+use Net::DNS;
+use Socket qw(inet_ntoa);
+
+sub all {
+  my ($class, $service_name) = @_;
+  my @hostnames;
+  if ($ENV{DEBUG}) {
+     if ($service_name eq "gitlab") {
+        @hostnames = qw(gitlabdocker_gitlab.1.xyz.foo gitlabdocker_gitlab.2.xyz.foo gitlabdocker_gitlab.3.xyz.foo);
+     } else {
+        @hostnames = ("gitlabdocker_${service_name}.1.xyz.foo");
+     }
+  } else {
+    my $r = Net::DNS::Resolver->new;
+    @hostnames = sort map {
+      my $ptrname = _ptrname($r, $_->{address});
+    } $r->search($service_name . ".", "A")->answer;
   }
-  return @hostnames;
+  return map { bless { name => $_ }, "My::Backend" } @hostnames;
 }
+
+sub _ptrname {
+  my ($r, $inet_address) = @_;
+  my $ptr;
+  foreach my $i (1..10) {
+    my ($ptr) = $r->search(inet_ntoa($_->{address}), "PTR")->answer;
+    my $ptrname = $ptr->ptrdname;
+    return $ptrname if defined(My::Backend::num({name => $ptrname}));
+  }
+  warn "Unable to resolve " . inet_ntoa($_->{address}) . " properly; last attempt gave out $ptr";
+  return undef;
+}
+
+sub nth {
+    my ($class, $service_name, $num) = @_;
+    my ($nth) = grep { $_->num == $num } $class->all($service_name);
+    return $nth;
+}
+
+sub name { shift->{name} }
+
+sub num {
+  my ($self) = @_;
+  my ($num) = $self->{name} =~ m/\.(\d+)\./;
+  return $num;
+}
+}
+
 [% END %]
 
 [% PERL %]
@@ -28,7 +69,8 @@ sub upstream_block {
 
      upstream [% block_name %] {
      [% PERL %]
-     foreach my $hostname (sort(all_backend_hostnames())) {
+     foreach my $host (grep {$_->num <= 2} My::Backend->all("gitlab")) {
+       my $hostname = $host->name;
      [% END %]
            server [% hostname %][% opt_port_suffix %];
      [% PERL %]
@@ -61,7 +103,9 @@ if ($is_prod) {
    $_out .= upstream_block("prod");
 }
 
-our $backend_name = $is_prod ? "prod" : "gitlabdocker_gitlab_3";
+# TODO: what if there is no 3? (During a rolling update)
+our $backend_name = $is_prod ? "prod" : My::Backend->nth("gitlab", 3)->name;
+our $plantuml_backend = 
 [% END %]
 
     server {
@@ -98,7 +142,6 @@ our $backend_name = $is_prod ? "prod" : "gitlabdocker_gitlab_3";
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
-            proxy_pass http://gitlabdocker_plantuml_1:8080/plantuml;
             error_page 502 /assets/502.html;
         }
     }
@@ -110,7 +153,7 @@ stream {
 if ($is_prod) {
    $_out .= upstream_block("ssh_prod", ":22");
 }
-our $ssh_backend_name = $is_prod ? "ssh_prod" : "gitlabdocker_gitlab_3:22";
+our $ssh_backend_name = $is_prod ? "ssh_prod" : My::Backend->nth("gitlab", 3)->name . ":22";
 [% END %]
 
     server {
