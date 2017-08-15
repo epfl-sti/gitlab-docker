@@ -14,3 +14,4 @@ RUN cd /opt/gitlab/embedded/service/gitlab-rails && bundle install
 
 ADD config/gitlab.yml /opt/gitlab/embedded/cookbooks/gitlab/templates/default/gitlab.yml.erb
 
+# HEALTHCHECK --start-period=600s CMD /opt/gitlab/bin/gitlab-healthcheck --fail
