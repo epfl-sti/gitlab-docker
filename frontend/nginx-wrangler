@@ -20,7 +20,6 @@ sub install_module {
 }
 
 BEGIN {
-  install_module "Net::DNS";  # Used by nginx.conf.tt to watch the backend list
   install_module "Log::Log4perl";
 }
 

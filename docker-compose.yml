@@ -1,10 +1,18 @@
+# docker-compose.yml to use with Docker swarm (*not* docker-compose,
+# except for building images)
+#
+# To deploy changes, type
+#
+# docker deploy --compose-file docker-compose.yml gitlabdocker
+#
+# Careful: changes will be effected in real time and might cause a
+# temporary outage, depending on what exactly the changes are!!
 version: "3.3"
 services:
-  gitlab:
-    image: epflsti/gitlab-docker:9.4.4
+  gitlabprod: &service_gitlab_prod
+    image: epflsti/gitlab-docker:9.4.5
     hostname: gitlab
     domainname: epfl.ch
-    build: gitlab-main
     volumes:
       - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key:/etc/gitlab/ssh_host_dsa_key:ro"
       - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key.pub:/etc/gitlab/ssh_host_dsa_key.pub:ro"
@@ -28,10 +36,13 @@ services:
       - "/srv/gitlab/run/redis-socket:/var/opt/gitlab/redis"
       - "/srv/gitlab/run/postgres-socket:/var/opt/gitlab/postgresql"
     deploy:
-      # 2 for the main instance, 1 for the staging area
-      replicas: 3
-      # nginx consumers need to be able to tell the instances apart
-      endpoint_mode: dnsrr
+      replicas: 2   # Allow rolling upgrades
+  gitlabstaging:
+    <<: *service_gitlab_prod
+    image: epflsti/gitlab-docker:9.4.5
+    build: gitlab-main
+    deploy:
+      replicas: 1   # Limit total load on host
   postgresql:
     image: postgres:9.6
     volumes:
@@ -47,12 +58,12 @@ services:
     command:
       - redis-server
       - /usr/local/etc/redis/redis.conf
-  frontend:
+  frontend: &service_frontend_prod
     image: nginx
     volumes:
       - "/srv/gitlab/ssl:/etc/ssl"
-      - "./frontend/nginx.conf.tt:/etc/nginx/nginx.conf.tt:ro"
       - "./frontend:/assets"
+      - "./frontend/nginx.conf.tt:/etc/nginx/nginx.conf.tt:ro"
     ports:
       - "443:443"
       - "22:22"
@@ -60,17 +71,21 @@ services:
       - ENVIRONMENT=prod
     command: /assets/nginx-wrangler /etc/nginx/nginx.conf.tt
   frontend_staging:
-    image: nginx
-    volumes:
-      - "/srv/gitlab/ssl:/etc/ssl"
-      - "./frontend/nginx.conf.tt:/etc/nginx/nginx.conf.tt:ro"
-      - "./frontend:/assets"
+    <<: *service_frontend_prod
+    environment:
+       - ENVIRONMENT=staging
     ports:
       - "444:443"
       - "23:22"
-    environment:
-      - ENVIRONMENT=staging
-    command: /assets/nginx-wrangler /etc/nginx/nginx.conf.tt
+    ## If you want to test changes to nginx.conf.tt, uncomment the next
+    ## four lines:
+    volumes:
+      - "/srv/gitlab/ssl:/etc/ssl"
+      - "./frontend:/assets"
+      - "./frontend/nginx.conf.DEV.tt:/etc/nginx/nginx.conf.tt:ro"
+    ## Then copy nginx.conf.tt to nginx.conf.DEV.tt, and apply the
+    ## changes using the "docker deploy" command at the top of this
+    ## file.
   redirect:
     image: quay.io/coreos/nginx-https-redirect
     ports:

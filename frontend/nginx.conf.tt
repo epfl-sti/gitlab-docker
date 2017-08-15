@@ -5,69 +5,8 @@ use warnings; no warnings "redefine";
 use strict;
 
 our $is_prod = "prod" eq ($ENV{ENVIRONMENT} || "dev");
+our $backend = $is_prod ? "gitlabprod" : "gitlabstaging";
 our $is_docker = ! -d "/dev/mapper";
-
-{
-package My::Backend;
-use Net::DNS;
-use Socket qw(inet_ntoa);
-
-sub all {
-  my ($class, $service_name) = @_;
-  my @hostnames;
-  if (! $is_docker) {
-     # No resolver available, use fake data
-     if ($service_name eq "gitlab") {
-        @hostnames = qw(gitlabdocker_gitlab.1.xyz.foo gitlabdocker_gitlab.2.xyz.foo gitlabdocker_gitlab.3.xyz.foo);
-     } else {
-        @hostnames = ($service_name);
-     }
-  } else {
-    my $r = Net::DNS::Resolver->new;
-    @hostnames = sort map {
-      my $ptrname = _ptrname($r, $_->{address});
-      defined($ptrname) ?
-         $ptrname :
-         $service_name;  # Not a DNS-RR service - Must use VIP by plain name
-    } $r->search($service_name . ".", "A")->answer;
-  }
-  return map { bless { name => $_ }, "My::Backend" } @hostnames;
-}
-
-sub _ptrname {
-  my ($r, $inet_address) = @_;
-  my $ptr;
-  foreach my $i (1..10) {
-    my ($ptr) = $r->search(inet_ntoa($_->{address}), "PTR");
-    return if (! $ptr);
-    my ($answer) = $ptr->answer;
-    my $ptrname = $answer->ptrdname;
-    return $ptrname if defined(My::Backend::num({name => $ptrname}));
-  }
-  warn "Unable to resolve " . inet_ntoa($_->{address}) . " properly; last attempt gave out $ptr";
-  return undef;
-}
-
-sub nth {
-    my ($class, $service_name, $num) = @_;
-    my ($nth) = grep { $_->num == $num } $class->all($service_name);
-    return $nth;
-}
-
-sub any {
-    my $class = shift;
-    my @all = $class->all(@_);
-    return $all[0];
-}
-
-sub name { shift->{name} }
-
-sub num {
-  my ($self) = @_;
-  my ($num) = $self->{name} =~ m/\.(\d+)\./;
-  return $num;
-}
-}
 
 [% END %]
 
@@ -78,28 +17,12 @@ sub upstream_block {
     my ($block_name, $opt_port_suffix) = @_;
     $opt_port_suffix ||= "";
     my $_out = "";
-[% END %]
 
+    [% END %]
      upstream [% block_name %] {
-     [% PERL %]
-     foreach my $host (grep {$_->num <= 2} My::Backend->all("gitlab")) {
-       my $hostname = $host->name;
-     [% END %]
-           server [% hostname %][% opt_port_suffix %];
-     [% PERL %]
-     }  # foreach my $hostname
-     if ($opt_port_suffix) {
-     [% END %]
-           server 127.0.0.1[% opt_port_suffix %];
-     [% PERL %]
-     } else {
-     [% END %]
-           server 127.0.0.1 down;
-     [% PERL %]
+           server [% backend %][% opt_port_suffix %];
      }
-     [% END %]
-     }
-[% PERL %]
+     [% PERL %]
      $_out;
 };
 [% END %]
@@ -112,12 +35,8 @@ events {
 http {
 
 [% PERL %]
-if ($is_prod) {
-   $_out .= upstream_block("prod");
-}
+   $_out .= upstream_block("gitlabweb");
 
-# TODO: what if there is no 3? (During a rolling update)
-our $backend_name = $is_prod ? "prod" : My::Backend->nth("gitlab", 3)->name;
 [% END %]
 
     server {
@@ -140,7 +59,7 @@ our $backend_name = $is_prod ? "prod" : My::Backend->nth("gitlab", 3)->name;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
-            proxy_pass http://[% backend_name %];
+            proxy_pass http://gitlabweb;
             error_page 500 /assets/50x.html;
             error_page 501 /assets/50x.html;
             error_page 502 /assets/50x.html;
@@ -163,14 +82,11 @@ our $backend_name = $is_prod ? "prod" : My::Backend->nth("gitlab", 3)->name;
 # TCP load balancing / redirect for ssh
 stream {
 [% PERL %]
-if ($is_prod) {
-   $_out .= upstream_block("ssh_prod", ":22");
-}
-our $ssh_backend_name = $is_prod ? "ssh_prod" : My::Backend->nth("gitlab", 3)->name . ":22";
+   $_out .= upstream_block("ssh", ":22");
 [% END %]
 
     server {
         listen 22;
-        proxy_pass [% ssh_backend_name %];
+        proxy_pass ssh;
     }
 }
