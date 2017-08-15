@@ -49,7 +49,6 @@ services:
       - /usr/local/etc/redis/redis.conf
   frontend:
     image: nginx
-    container_name: gitlabdocker_frontend  # Single instance, not scalable
     volumes:
       - "/srv/gitlab/ssl:/etc/ssl"
       - "./frontend/nginx.conf.tt:/etc/nginx/nginx.conf.tt:ro"
@@ -62,7 +61,6 @@ services:
     command: /assets/nginx-wrangler /etc/nginx/nginx.conf.tt
   frontend_staging:
     image: nginx
-    container_name: gitlabdocker_frontend_staging  # Single instance, not scalable
     volumes:
       - "/srv/gitlab/ssl:/etc/ssl"
       - "./frontend/nginx.conf.tt:/etc/nginx/nginx.conf.tt:ro"
