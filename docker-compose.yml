@@ -10,7 +10,7 @@
 version: "3.3"
 services:
   gitlabprod: &service_gitlab_prod
-    image: epflsti/gitlab-docker:9.4.5
+    image: epflsti/gitlab-docker:9.5.0-rc2
     hostname: gitlab
     domainname: epfl.ch
     volumes:
@@ -39,7 +39,7 @@ services:
       replicas: 2   # Allow rolling upgrades
   gitlabstaging:
     <<: *service_gitlab_prod
-    image: epflsti/gitlab-docker:9.4.5
+    image: epflsti/gitlab-docker:9.5.0-rc2
     build: gitlab-main
     deploy:
       replicas: 1   # Limit total load on host
@@ -79,10 +79,10 @@ services:
       - "23:22"
     ## If you want to test changes to nginx.conf.tt, uncomment the next
     ## four lines:
-    volumes:
-      - "/srv/gitlab/ssl:/etc/ssl"
-      - "./frontend:/assets"
-      - "./frontend/nginx.conf.DEV.tt:/etc/nginx/nginx.conf.tt:ro"
+    # volumes:
+    #   - "/srv/gitlab/ssl:/etc/ssl"
+    #   - "./frontend:/assets"
+    #   - "./frontend/nginx.conf.DEV.tt:/etc/nginx/nginx.conf.tt:ro"
     ## Then copy nginx.conf.tt to nginx.conf.DEV.tt, and apply the
     ## changes using the "docker deploy" command at the top of this
     ## file.
