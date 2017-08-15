@@ -2,14 +2,32 @@
 
 # Keep nginx in check; SIGHUP it whenever the backend set changes
 
+our $apt_updated = 0;
+sub install_module {
+  my ($modulename) = @_;
+
+  return if eval { require "$modulename"; 1 };
+
+  if (! $apt_updated) {
+    system("apt -y update");
+    $apt_updated = 1;
+  }
+
+  my $dpkg_modulename = sprintf("lib%s-perl",
+                                join("-", split(/::/, lc($modulename))));
+  system("apt -y install $dpkg_modulename");
+  die "apt  -y install $dpkg_modulename failed with code $?" if $?;
+}
+
 BEGIN {
-  unless (eval { require "Net::DNS"; 1 }) {
-    system("set -e -x; apt -y update; apt -y install libnet-dns-perl")
-  };
+  install_module "Net::DNS";  # Used by nginx.conf.tt to watch the backend list
+  install_module "Log::Log4perl";
 }
 
 use strict;
 use POSIX ":sys_wait_h";
+use Log::Log4perl qw/:easy/;
+Log::Log4perl->easy_init($INFO);
 
 use lib "/assets";
 use FauxTemplate;
@@ -18,7 +36,7 @@ our ($config_template) = @ARGV;
 
 sub interpolated_config {
   local *CONFIG_TMPL;
-  open(CONFIG_TMPL, "<", $config_template) or die "open($config_template): $!";
+  open(CONFIG_TMPL, "<", $config_template) or LOGDIE "open($config_template): $!";
   return interpolate(<CONFIG_TMPL>);
 }
 
@@ -26,32 +44,32 @@ sub configure_nginx {
   my ($config) = @_;
   local *CONFIG;
   open(CONFIG, ">", "/etc/nginx/nginx.conf.NEW.$$")
-    or die "Unable to open /etc/nginx/nginx.conf.NEW.$$ for writing: $!";
+    or LOGDIE "Unable to open /etc/nginx/nginx.conf.NEW.$$ for writing: $!";
   do { (print CONFIG $config) && (close CONFIG) }
     or die "Unable to close /etc/nginx/nginx.conf.NEW.$$: $!";
   rename("/etc/nginx/nginx.conf.NEW.$$", "/etc/nginx/nginx.conf")
-    or die "Unable to rename /etc/nginx/nginx.conf.NEW.$$ to /etc/nginx/nginx.conf: $!";
+    or LOGDIE "Unable to rename /etc/nginx/nginx.conf.NEW.$$ to /etc/nginx/nginx.conf: $!";
 }
 
 sub watch_nginx {
   configure_nginx(my $config = interpolated_config);
   exec("nginx", "-g", "daemon off;") unless my $pid = fork();
-  warn "nginx started\n";
+  WARN "nginx started\n";
 
   while(sleep 5) {
     if ( 0 != waitpid($pid, WNOHANG) ) {
-      die "nginx exited with " .
+      LOGDIE "nginx exited with " .
         ( ($? & 127)
           ? "signal $?"
           : "exit code " . ($? >> 8)
         );
     }
     next if $config eq (my $newconfig = interpolated_config);
-    warn "Configuration changed - Restarting nginx\n";
+    WARN "Configuration changed - Restarting nginx\n";
     $config = $newconfig;
     configure_nginx($config);
     kill HUP => $pid;
   }
 }
 
-watch_nginx(); die "watch_nginx should not return";
+watch_nginx(); LOGDIE "watch_nginx should not return";
