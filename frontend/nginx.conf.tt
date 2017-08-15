@@ -5,6 +5,7 @@ use warnings; no warnings "redefine";
 use strict;
 
 our $is_prod = "prod" eq ($ENV{ENVIRONMENT} || "dev");
+our $is_docker = ! -d "/dev/mapper";
 
 {
 package My::Backend;
@@ -14,16 +15,20 @@ use Socket qw(inet_ntoa);
 sub all {
   my ($class, $service_name) = @_;
   my @hostnames;
-  if ($ENV{DEBUG}) {
+  if (! $is_docker) {
+     # No resolver available, use fake data
      if ($service_name eq "gitlab") {
         @hostnames = qw(gitlabdocker_gitlab.1.xyz.foo gitlabdocker_gitlab.2.xyz.foo gitlabdocker_gitlab.3.xyz.foo);
      } else {
-        @hostnames = ("gitlabdocker_${service_name}.1.xyz.foo");
+        @hostnames = ($service_name);
      }
   } else {
     my $r = Net::DNS::Resolver->new;
     @hostnames = sort map {
       my $ptrname = _ptrname($r, $_->{address});
+      defined($ptrname) ?
+         $ptrname :
+         $service_name;  # Not a DNS-RR service - Must use VIP by plain name
     } $r->search($service_name . ".", "A")->answer;
   }
   return map { bless { name => $_ }, "My::Backend" } @hostnames;
@@ -33,8 +38,10 @@ sub _ptrname {
   my ($r, $inet_address) = @_;
   my $ptr;
   foreach my $i (1..10) {
-    my ($ptr) = $r->search(inet_ntoa($_->{address}), "PTR")->answer;
-    my $ptrname = $ptr->ptrdname;
+    my ($ptr) = $r->search(inet_ntoa($_->{address}), "PTR");
+    return if (! $ptr);
+    my ($answer) = $ptr->answer;
+    my $ptrname = $answer->ptrdname;
     return $ptrname if defined(My::Backend::num({name => $ptrname}));
   }
   warn "Unable to resolve " . inet_ntoa($_->{address}) . " properly; last attempt gave out $ptr";
@@ -45,6 +52,12 @@ sub nth {
     my ($class, $service_name, $num) = @_;
     my ($nth) = grep { $_->num == $num } $class->all($service_name);
     return $nth;
+}
+
+sub any {
+    my $class = shift;
+    my @all = $class->all(@_);
+    return $all[0];
 }
 
 sub name { shift->{name} }
@@ -105,7 +118,6 @@ if ($is_prod) {
 
 # TODO: what if there is no 3? (During a rolling update)
 our $backend_name = $is_prod ? "prod" : My::Backend->nth("gitlab", 3)->name;
-our $plantuml_backend = 
 [% END %]
 
     server {
@@ -136,12 +148,13 @@ our $plantuml_backend =
             error_page 504 /assets/50x.html;
         }
 
-        location /plantuml {
+        location /plantuml/ {
             proxy_set_header HOST $host;
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
+            proxy_pass http://plantuml:8080/;
             error_page 502 /assets/502.html;
         }
     }
