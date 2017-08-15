@@ -1,7 +1,7 @@
 version: "3.3"
 services:
   gitlab:
-    image: epflsti/gitlab-docker
+    image: epflsti/gitlab-docker:9.4.4
     hostname: gitlab
     domainname: epfl.ch
     build: gitlab-main
