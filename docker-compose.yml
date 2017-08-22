@@ -10,7 +10,7 @@
 version: "3.3"
 services:
   gitlabprod: &service_gitlab_prod
-    image: epflsti/gitlab-docker:9.5.0-rc2
+    image: epflsti/gitlab-docker:9.5.0-rc8
     hostname: gitlab
     domainname: epfl.ch
     volumes:
@@ -39,7 +39,6 @@ services:
       replicas: 2   # Allow rolling upgrades
   gitlabstaging:
     <<: *service_gitlab_prod
-    image: epflsti/gitlab-docker:9.5.0-rc2
     build: gitlab-main
     deploy:
       replicas: 1   # Limit total load on host
