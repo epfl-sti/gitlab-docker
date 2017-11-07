@@ -13,6 +13,4 @@ RUN cd /opt/gitlab/embedded/service/gitlab-rails && bundle install
 # To check that omniauth-tequila was indeed installed in the correct place:
 # docker run --rm -it <image_hash> ls /opt/gitlab/embedded/lib/ruby/gems/2.3.0/gems/
 
-ADD config/gitlab.yml /opt/gitlab/embedded/cookbooks/gitlab/templates/default/gitlab.yml.erb
-
 # HEALTHCHECK --start-period=600s CMD /opt/gitlab/bin/gitlab-healthcheck --fail

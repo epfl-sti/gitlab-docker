@@ -25,7 +25,7 @@ services:
       - "/srv/gitlab/secrets/ssh/ssh_host_rsa_key:/etc/gitlab/ssh_host_rsa_key:ro"
       - "/srv/gitlab/secrets/ssh/ssh_host_rsa_key.pub:/etc/gitlab/ssh_host_rsa_key.pub:ro"
       - "/srv/gitlab/secrets/gitlab-secrets.json:/etc/gitlab/gitlab-secrets.json"
-      - "./gitlab-main/config/gitlab.rb:/etc/gitlab/gitlab.rb"
+      - "./gitlab-main/gitlab.rb:/etc/gitlab/gitlab.rb"
       - "/srv/gitlab/backup:/var/opt/gitlab/backups"
       - "/srv/gitlab/data/git-data:/var/opt/gitlab/git-data"
       - "/srv/gitlab/data/ssh_user_public_keys:/var/opt/gitlab/.ssh"
