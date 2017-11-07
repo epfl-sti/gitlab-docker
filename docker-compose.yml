@@ -10,7 +10,7 @@
 version: "3.3"
 services:
   gitlabprod: &service_gitlab_prod
-    image: epflsti/gitlab-docker:9.5.0-rc8-1
+    image: epflsti/gitlab-docker:10.0.5
     hostname: gitlab
     domainname: epfl.ch
     volumes:
