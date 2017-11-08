@@ -29,3 +29,10 @@ gitlab_rails['db_sslrootcert'] = nil
 redis['enable'] = false
 gitlab_rails['redis_socket'] = "/var/opt/gitlab/redis/redis.socket"
 
+gitlab_rails['omniauth_enabled'] = true
+gitlab_rails['omniauth_providers'] = [
+  {
+    "name" => "tequila",
+    "args" => { "request_info" => {name: 'displayname', email: 'email', nickname: 'username'}, "service_name" => "gitlab" }
+  }
+]
