@@ -10,7 +10,9 @@ nginx['proxy_set_headers'] = {
   "X-Forwarded-Ssl" => "on"
 }
 
-user['git_user_email'] = "noreply@epfl.ch"
+gitlab_rails['smtp_enable'] = true
+gitlab_rails['smtp_address'] = "mail.epfl.ch"
+gitlab_rails['gitlab_email_from'] = 'noreply@epfl.ch'
 
 postgresql['enable'] = false
 gitlab_rails['db_adapter'] = "postgresql"
