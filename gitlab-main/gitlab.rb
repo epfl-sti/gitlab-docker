@@ -1,7 +1,20 @@
 # Configuration file to go in /etc/gitlab/gitlab.rb
 #
+# These values are fed into the Chef configuration in the so-called
+# Omnibus system
+# (/opt/gitlab/embedded/cookbooks/cache/cookbooks/gitlab/templates/default/gitlab.yml.erb)
+# to produce various configuration files, and in particular
+# /opt/gitlab/embedded/nodes/gitlab.json
+#
 # See instructions and a complete example at
 # https://github.com/gitlabhq/omnibus-gitlab/blob/master/files/gitlab-config-template/gitlab.rb.template
+#
+# To effect changes in this file, you have to restart the Docker
+# container. Note: the documented instructions ("gitlab-ctl
+# reconfigure") no *not* work because gitlab.rb is mounted as a
+# single-file volume, and the changes to it are *not* visible from
+# already-running Docker containers (unlike what would happen if the
+# volume was a directory)
 external_url 'https://gitlab.epfl.ch/'
 nginx['listen_port'] = 80
 nginx['listen_https'] = false
