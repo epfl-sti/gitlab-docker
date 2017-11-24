@@ -15,7 +15,7 @@
 # single-file volume, and the changes to it are *not* visible from
 # already-running Docker containers (unlike what would happen if the
 # volume was a directory)
-external_url 'https://gitlab.epfl.ch/'
+external_url (ENV["ENVIRONMENT"] == "staging" ? 'https://gitlab.epfl.ch:444/' : 'https://gitlab.epfl.ch/')
 nginx['listen_port'] = 80
 nginx['listen_https'] = false
 nginx['proxy_set_headers'] = {

@@ -12,6 +12,8 @@ services:
   gitlabprod:
     image: epflsti/gitlab-docker:10.0.5
     hostname: gitlab
+    environment:
+      - ENVIRONMENT=prod
     volumes:
       # Keep this list in sync with service gitlabstaging
       - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key:/etc/gitlab/ssh_host_dsa_key:ro"
@@ -41,6 +43,8 @@ services:
     image: epflsti/gitlab-docker:10.0.5
     build: gitlab-main
     hostname: gitlab
+    environment:
+      - ENVIRONMENT=staging
     volumes:
       # It follows from https://stackoverflow.com/a/30683699/435004 that there
       # is no avoiding duplicating this list (since we want to tweak the end of it
