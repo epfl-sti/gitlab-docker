@@ -75,6 +75,8 @@ services:
       - "/srv/gitlab/config/postgresql/passwd:/etc/passwd:ro"
   # The staging database is *not* persistent on purpose. Instead,
   # it restores from latest backup every time one restarts it.
+  # To access it, do:
+  # docker exec -it $(docker ps -q -f name=gitlabdocker_postgresql_staging) psql -U postgres gitlabhq_production
   postgresql_staging:
     image: postgres:9.6
     volumes:
