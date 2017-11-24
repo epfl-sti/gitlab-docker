@@ -42,13 +42,24 @@ services:
     build: gitlab-main
     deploy:
       replicas: 1   # Limit total load on host
-  postgresql:
+  postgresql_prod:
     image: postgres:9.6
     volumes:
       - "/srv/gitlab/postgresql/data:/var/lib/postgresql/data"
       - "/srv/gitlab/logs/postgresql:/var/log"
       - "/srv/gitlab/run/postgres-socket/:/run/postgresql/"
-      - "/srv/gitlab/config/postgresql/passwd:/etc/passwd"
+      - "/srv/gitlab/config/postgresql/passwd:/etc/passwd:ro"
+  # The staging database is *not* persistent on purpose. Instead,
+  # it restores from latest backup every time one restarts it.
+  postgresql_staging:
+    image: postgres:9.6
+    volumes:
+      # As per https://hub.docker.com/_/postgres/, restore these files
+      # at startup.
+      - "./staging/00-create-db.sql:/docker-entrypoint-initdb.d/00-create-db.sql:ro"
+      - "/srv/gitlab/backup/postgresql_dump.sql:/docker-entrypoint-initdb.d/10-postgresql_dump.sql:ro"
+      - "/srv/gitlab/run/postgres-socket-staging/:/run/postgresql/"
+      - "/srv/gitlab/config/postgresql/passwd:/etc/passwd:ro"
   redis:
     image: redis:latest
     volumes:
