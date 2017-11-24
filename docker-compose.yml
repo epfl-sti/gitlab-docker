@@ -9,11 +9,12 @@
 # temporary outage, depending on what exactly the changes are!!
 version: "3.3"
 services:
-  gitlabprod: &service_gitlab_prod
+  gitlabprod:
     image: epflsti/gitlab-docker:10.0.5
     hostname: gitlab
     domainname: epfl.ch
     volumes:
+      # Keep this list in sync with service gitlabstaging
       - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key:/etc/gitlab/ssh_host_dsa_key:ro"
       - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key.pub:/etc/gitlab/ssh_host_dsa_key.pub:ro"
       - "/srv/gitlab/secrets/ssh/ssh_host_key:/etc/gitlab/ssh_host_key:ro"
@@ -32,16 +33,40 @@ services:
       - "/srv/gitlab/data/shared:/var/opt/gitlab/gitlab-rails/shared"
       - "/srv/gitlab/data/uploads:/var/opt/gitlab/gitlab-rails/uploads"
       - "/srv/gitlab/data/gitlab-ci/builds:/var/opt/gitlab/gitlab-ci/builds"
-      # Make visible the UNIX domain sockets of the shared DB containers below:
+      # Below this line, things are different between gitlabprod and gitlabstaging
       - "/srv/gitlab/run/redis-socket:/var/opt/gitlab/redis"
       - "/srv/gitlab/run/postgres-socket:/var/opt/gitlab/postgresql"
     deploy:
       replicas: 2   # Allow rolling upgrades
   gitlabstaging:
-    <<: *service_gitlab_prod
+    image: epflsti/gitlab-docker:10.0.5
     build: gitlab-main
-    deploy:
-      replicas: 1   # Limit total load on host
+    hostname: gitlab
+    volumes:
+      # It follows from https://stackoverflow.com/a/30683699/435004 that there
+      # is no avoiding duplicating this list (since we want to tweak the end of it
+      # between staging and production).
+      - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key:/etc/gitlab/ssh_host_dsa_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_dsa_key.pub:/etc/gitlab/ssh_host_dsa_key.pub:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_key:/etc/gitlab/ssh_host_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_key.pub:/etc/gitlab/ssh_host_key.pub:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_ecdsa_key:/etc/gitlab/ssh_host_ecdsa_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_ecdsa_key.pub:/etc/gitlab/ssh_host_ecdsa_key.pub:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_ed25519_key:/etc/gitlab/ssh_host_ed25519_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_ed25519_key.pub:/etc/gitlab/ssh_host_ed25519_key.pub:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_rsa_key:/etc/gitlab/ssh_host_rsa_key:ro"
+      - "/srv/gitlab/secrets/ssh/ssh_host_rsa_key.pub:/etc/gitlab/ssh_host_rsa_key.pub:ro"
+      - "/srv/gitlab/secrets/gitlab-secrets.json:/etc/gitlab/gitlab-secrets.json"
+      - "./gitlab-main/gitlab.rb:/etc/gitlab/gitlab.rb"
+      - "/srv/gitlab/backup:/var/opt/gitlab/backups"
+      - "/srv/gitlab/data/git-data:/var/opt/gitlab/git-data"
+      - "/srv/gitlab/data/ssh_user_public_keys:/var/opt/gitlab/.ssh"
+      - "/srv/gitlab/data/shared:/var/opt/gitlab/gitlab-rails/shared"
+      - "/srv/gitlab/data/uploads:/var/opt/gitlab/gitlab-rails/uploads"
+      - "/srv/gitlab/data/gitlab-ci/builds:/var/opt/gitlab/gitlab-ci/builds"
+      # Below this line, things are different between gitlabprod and gitlabstaging
+      - "/srv/gitlab/run/redis-socket:/var/opt/gitlab/redis"
+      - "/srv/gitlab/run/postgres-socket-staging:/var/opt/gitlab/postgresql"
   postgresql_prod:
     image: postgres:9.6
     volumes:
