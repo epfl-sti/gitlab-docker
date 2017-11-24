@@ -47,6 +47,8 @@ redis['enable'] = false
 gitlab_rails['redis_socket'] = "/var/opt/gitlab/redis/redis.socket"
 
 gitlab_rails['omniauth_enabled'] = true
+gitlab_rails['omniauth_allow_single_sign_on'] = true
+gitlab_rails['omniauth_block_auto_created_users'] = false
 gitlab_rails['omniauth_providers'] = [
   {
     "name" => "tequila",
