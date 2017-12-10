@@ -68,7 +68,7 @@ services:
       - "/srv/gitlab/data/uploads:/var/opt/gitlab/gitlab-rails/uploads"
       - "/srv/gitlab/data/gitlab-ci/builds:/var/opt/gitlab/gitlab-ci/builds"
       # Below this line, things are different between gitlabprod and gitlabstaging
-      - "/srv/gitlab/run/redis-socket:/var/opt/gitlab/redis"
+      - "/srv/gitlab/run/redis-socket-staging:/var/opt/gitlab/redis"
       - "/srv/gitlab/run/postgres-socket-staging:/var/opt/gitlab/postgresql"
   postgresql_prod:
     image: postgres:9.6
@@ -96,6 +96,14 @@ services:
     volumes:
       - "/srv/gitlab/config/redis:/usr/local/etc/redis"
       - "/srv/gitlab/run/redis-socket:/run/redis"
+    command:
+      - redis-server
+      - /usr/local/etc/redis/redis.conf
+  redis_staging:
+    image: redis:latest
+    volumes:
+      - "/srv/gitlab/config/redis:/usr/local/etc/redis"
+      - "/srv/gitlab/run/redis-socket-staging:/run/redis"
     command:
       - redis-server
       - /usr/local/etc/redis/redis.conf
