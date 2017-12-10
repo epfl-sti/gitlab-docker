@@ -7,6 +7,7 @@ use strict;
 our $is_prod = "prod" eq ($ENV{ENVIRONMENT} || "dev");
 our $backend = $is_prod ? "gitlabprod" : "gitlabstaging";
 our $is_docker = ! -d "/dev/mapper";
+our $externally_visible_url = $is_prod ? "https://gitlab.epfl.ch/" : "https://gitlab.epfl.ch:444/";
 
 [% END %]
 
@@ -58,6 +59,7 @@ http {
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_redirect https://gitlab.epfl.ch/ [% externally_visible_url %];
 
             proxy_pass http://gitlabweb;
             error_page 500 /assets/50x.html;
