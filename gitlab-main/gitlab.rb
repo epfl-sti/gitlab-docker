@@ -10,8 +10,8 @@
 # https://github.com/gitlabhq/omnibus-gitlab/blob/master/files/gitlab-config-template/gitlab.rb.template
 #
 # To effect changes in this file, you have to restart the Docker
-# container. Note: the documented instructions ("gitlab-ctl
-# reconfigure") no *not* work because gitlab.rb is mounted as a
+# container. Note: the documented instruction ("gitlab-ctl
+# reconfigure") does *not* work because gitlab.rb is mounted as a
 # single-file volume, and the changes to it are *not* visible from
 # already-running Docker containers (unlike what would happen if the
 # volume was a directory)
@@ -52,6 +52,10 @@ gitlab_rails['omniauth_block_auto_created_users'] = false
 gitlab_rails['omniauth_providers'] = [
   {
     "name" => "tequila",
-    "args" => { "request_info" => {name: 'displayname', email: 'email', nickname: 'username'}, "service_name" => "gitlab" }
+    "args" => {
+      "request_info" => {name: 'displayname', email: 'email', nickname: 'username'},
+      "service_name" => "gitlab",
+      "additional_parameters" => {allows: "categorie=epfl-guests"}
+    }
   }
 ]
